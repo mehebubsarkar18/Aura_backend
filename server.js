@@ -39,13 +39,13 @@ if (process.env.NODE_ENV === 'production') {
   const frontendPath = path.join(__dirname, '../Fitness_Tracker_Frontend/dist');
   app.use(express.static(frontendPath));
 
-  // Catch-all route for React SPA routing
-  app.get('/:any*', (req, res, next) => {
-    // If it's an API route, let it pass through
-    if (req.url.startsWith('/api')) {
-      return next();
+  // Catch-all middleware for React SPA routing (Avoids Express 5 path-to-regexp issues)
+  app.use((req, res, next) => {
+    if (req.method === 'GET' && !req.url.startsWith('/api') && !req.url.includes('.')) {
+      res.sendFile(path.resolve(frontendPath, 'index.html'));
+    } else {
+      next();
     }
-    res.sendFile(path.resolve(frontendPath, 'index.html'));
   });
 } else {
   // Base Check Route for Development

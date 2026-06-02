@@ -2,10 +2,20 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    const connUri = process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/aurafit';
-    console.log(`Connecting to MongoDB at: ${connUri}`);
+    const isProduction = process.env.NODE_ENV === 'production';
+    const connUri = process.env.MONGO_URI;
     
-    const conn = await mongoose.connect(connUri);
+    if (!connUri) {
+      if (isProduction) {
+        throw new Error('MONGO_URI is missing in production environment variables!');
+      }
+      console.log('Connecting to local MongoDB (Development)...');
+    }
+
+    const finalUri = connUri || 'mongodb://127.0.0.1:27017/aurafit';
+    console.log(`Connection target: ${finalUri.split('@').pop()}`); // Log only host for security
+    
+    const conn = await mongoose.connect(finalUri);
     
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
