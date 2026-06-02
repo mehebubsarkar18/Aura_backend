@@ -1,0 +1,31 @@
+# Stage 1: Build the React application
+FROM node:20-slim AS frontend-build
+WORKDIR /usr/src/frontend
+COPY Fitness_Tracker_Frontend/package*.json ./
+RUN npm install
+COPY Fitness_Tracker_Frontend/ .
+# In single deployment, API is on the same host
+ARG VITE_API_BASE_URL=/api
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+RUN npm run build
+
+# Stage 2: Setup the Backend and include Frontend
+FROM node:20-slim
+WORKDIR /usr/src/app
+
+# Copy Backend files
+COPY Fitness_Tracker_Backend/package*.json ./
+RUN npm install --production
+COPY Fitness_Tracker_Backend/ .
+
+# Copy built frontend from Stage 1
+COPY --from=frontend-build /usr/src/frontend/dist ../Fitness_Tracker_Frontend/dist
+
+# Expose port
+EXPOSE 5000
+
+# Set environment
+ENV NODE_ENV=production
+
+# Start the application
+CMD ["node", "server.js"]
