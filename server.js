@@ -36,17 +36,17 @@ setupRoutes(app);
 
 // Serve Static Files from Frontend in Production
 if (process.env.NODE_ENV === 'production') {
-  // Use a relative path that works inside the Docker container
   const frontendPath = path.resolve(__dirname, '../Fitness_Tracker_Frontend/dist');
   app.use(express.static(frontendPath));
 
-  // Catch-all middleware for React SPA routing
-  app.get('*', (req, res, next) => {
-    // If it's an API route, let it pass through
-    if (req.url.startsWith('/api')) {
-      return next();
+  // SPA Fallback Middleware (Express 5 safe)
+  app.use((req, res, next) => {
+    // Only handle GET requests that aren't for API or static files
+    if (req.method === 'GET' && !req.url.startsWith('/api') && !req.path.includes('.')) {
+      res.sendFile(path.join(frontendPath, 'index.html'));
+    } else {
+      next();
     }
-    res.sendFile(path.join(frontendPath, 'index.html'));
   });
 } else {
   // Base Check Route for Development
