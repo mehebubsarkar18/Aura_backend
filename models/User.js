@@ -28,9 +28,13 @@ const UserSchema = new mongoose.Schema({
       type: Number,
       default: 2000,
     },
-    steps: {
+    caloriesBurned: {
       type: Number,
-      default: 10000,
+      default: 500,
+    },
+    activeMinutes: {
+      type: Number,
+      default: 45,
     },
     waterMl: {
       type: Number,
@@ -40,6 +44,32 @@ const UserSchema = new mongoose.Schema({
       type: Number,
       default: 480, // 8 hours
     },
+  },
+  weight: {
+    type: Number,
+    default: 0,
+  },
+  height: {
+    type: Number,
+    default: 0,
+  },
+  age: {
+    type: Number,
+    default: 0,
+  },
+  gender: {
+    type: String,
+    enum: ['male', 'female', 'other', ''],
+    default: 'other',
+  },
+  fitnessGoal: {
+    type: String,
+    enum: ['lose-weight', 'maintain-fit', 'gain-muscle', ''],
+    default: '',
+  },
+  onboardingCompleted: {
+    type: Boolean,
+    default: false,
   },
   createdAt: {
     type: Date,

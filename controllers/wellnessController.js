@@ -50,7 +50,29 @@ const logWellness = async (req, res) => {
   }
 };
 
+// @desc    Delete a wellness log
+// @route   DELETE /api/wellness/log/:id
+// @access  Private
+const deleteWellness = async (req, res) => {
+  try {
+    const log = await Wellness.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user.id,
+    });
+
+    if (!log) {
+      return res.status(404).json({ success: false, error: 'Wellness log not found' });
+    }
+
+    res.status(200).json({ success: true, message: 'Log deleted' });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: 'Server Error deleting wellness log' });
+  }
+};
+
 module.exports = {
   getWellnessHistory,
   logWellness,
+  deleteWellness,
 };

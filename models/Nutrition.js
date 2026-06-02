@@ -6,11 +6,7 @@ const NutritionSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
-  mealType: {
-    type: String,
-    required: [true, 'Please add a meal type'],
-    enum: ['Breakfast', 'Lunch', 'Dinner', 'Snack'],
-  },
+
   foodItem: {
     type: String,
     required: [true, 'Please add a food item name'],

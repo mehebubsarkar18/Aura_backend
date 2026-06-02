@@ -16,10 +16,17 @@ const app = express();
 // Standard Security & Utility Middlewares
 app.use(helmet());
 app.use(cors({
-  origin: '*', // Allow connections from frontend Vite dev environment
-  credentials: true
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
+
+// Request Logger for Debugging
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+});
 
 // Base Check Route
 app.get('/', (req, res) => {
