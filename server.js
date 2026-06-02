@@ -40,7 +40,7 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(frontendPath));
 
   // Catch-all route for React SPA routing
-  app.get('(.*)', (req, res, next) => {
+  app.get('/:any*', (req, res, next) => {
     // If it's an API route, let it pass through
     if (req.url.startsWith('/api')) {
       return next();
