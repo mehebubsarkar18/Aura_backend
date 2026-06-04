@@ -12,6 +12,9 @@ dotenv.config();
 // Connect to MongoDB database
 connectDB();
 
+console.log('Loaded ENV keys:', Object.keys(process.env).filter(k => k.includes('KEY') || k.includes('URI') || k.includes('SECRET')));
+console.log('GEMINI_API_KEY length:', process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 'undefined');
+
 const app = express();
 
 // Standard Security & Utility Middlewares
