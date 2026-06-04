@@ -7,7 +7,7 @@ const Weight = require('../models/Weight');
 const generateToken = (id) => {
   return jwt.sign(
     { id },
-    process.env.JWT_SECRET || 'aurafit_jwt_secret_token_1234',
+    process.env.JWT_SECRET,
     { expiresIn: '30d' }
   );
 };

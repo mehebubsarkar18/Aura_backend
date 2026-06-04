@@ -16,7 +16,7 @@ const protect = async (req, res, next) => {
       // Verify token
       const decoded = jwt.verify(
         token,
-        process.env.JWT_SECRET || 'aurafit_jwt_secret_token_1234'
+        process.env.JWT_SECRET
       );
 
       // Get user from the token, excluding password
