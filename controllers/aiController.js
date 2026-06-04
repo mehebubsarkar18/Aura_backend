@@ -14,14 +14,18 @@ exports.chatWithAI = async (req, res) => {
   try {
     const { message, userContext } = req.body;
 
-    if (!process.env.OPENROUTER_API_KEY) {
+    const key = process.env.OPENROUTER_API_KEY;
+    if (!key) {
       return res.status(500).json({ error: "OpenRouter API key is not configured in Render environment." });
     }
+
+    // Debug log (safe): print first 6 chars of key to verify format
+    console.log(`Using OpenRouter key starting with: ${key.substring(0, 6)}...`);
 
     const contextPrompt = `User Context: ${JSON.stringify(userContext)}\n\nUser Message: ${message}`;
 
     const response = await openai.chat.completions.create({
-      model: "google/gemini-flash-1.5:free", 
+      model: "openrouter/free", 
       messages: [
         { 
           role: "system", 
