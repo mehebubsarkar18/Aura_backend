@@ -21,7 +21,7 @@ exports.chatWithAI = async (req, res) => {
     const contextPrompt = `User Context: ${JSON.stringify(userContext)}\n\nUser Message: ${message}`;
 
     const response = await openai.chat.completions.create({
-      model: "google/gemini-flash-1.5", // You can also use "openai/gpt-3.5-turbo" or others
+      model: "google/gemini-flash-1.5", 
       messages: [
         { 
           role: "system", 
