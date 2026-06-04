@@ -4,6 +4,7 @@ const nutritionRoutes = require('./nutritionRoutes');
 const wellnessRoutes = require('./wellnessRoutes');
 const dashboardRoutes = require('./dashboardRoutes');
 const weightRoutes = require('./weightRoutes');
+const aiRoutes = require('./aiRoutes');
 
 module.exports = (app) => {
   // API Routes
@@ -13,4 +14,5 @@ module.exports = (app) => {
   app.use('/api/wellness', wellnessRoutes);
   app.use('/api/dashboard', dashboardRoutes);
   app.use('/api/weight', weightRoutes);
+  app.use('/api/ai', aiRoutes);
 };
