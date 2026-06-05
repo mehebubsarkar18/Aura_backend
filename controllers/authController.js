@@ -3,51 +3,54 @@ const User = require('../models/User');
 const Rating = require('../models/Rating');
 const Weight = require('../models/Weight');
 
-// Helper function to generate JWT
-const generateToken = (id) => {
+// Helper function to generate Access Token (short-lived)
+const generateAccessToken = (id) => {
   return jwt.sign(
     { id },
     process.env.JWT_SECRET,
-    { expiresIn: '30d' }
+    { expiresIn: '30m' }
   );
 };
 
-// Helper to calculate scientific daily goals
-const calculateDailyGoals = (weight, height, age, gender, fitnessGoal) => {
-  // BMR Calculation (Mifflin-St Jeor Equation)
-  let bmr;
-  if (gender === 'male') {
-    bmr = 10 * weight + 6.25 * height - 5 * age + 5;
-  } else {
-    bmr = 10 * weight + 6.25 * height - 5 * age - 161;
-  }
+// Helper function to generate Refresh Token (long-lived)
+const generateRefreshToken = (id) => {
+  return jwt.sign(
+    { id },
+    process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  );
+};
 
-  // Activity Factor (Lightly active = 1.375)
-  const tdee = bmr * 1.375;
+// Helper function to send tokens
+const sendTokens = (user, statusCode, res) => {
+  const accessToken = generateAccessToken(user._id);
+  const refreshToken = generateRefreshToken(user._id);
 
-  let calories = tdee;
-  let activeMinutes = 45;
-  let sleepMinutes = 480;
-
-  if (fitnessGoal === 'lose-weight') {
-    calories = tdee - 500;
-    activeMinutes = 60;
-  } else if (fitnessGoal === 'gain-muscle') {
-    calories = tdee + 400;
-    activeMinutes = 75;
-    sleepMinutes = 510; // Extra recovery
-  } else {
-    // maintain-fit
-    calories = tdee;
-    activeMinutes = 45;
-  }
-
-  return {
-    calories: Math.round(calories),
-    activeMinutes,
-    waterMl: Math.round(weight * 35), // 35ml per kg
-    sleepMinutes,
+  const cookieOptions = {
+    expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Lax'
   };
+
+  res.cookie('refreshToken', refreshToken, cookieOptions);
+
+  res.status(statusCode).json({
+    success: true,
+    token: accessToken,
+    user: {
+      id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      dailyGoals: user.dailyGoals,
+      onboardingCompleted: user.onboardingCompleted,
+      weight: user.weight,
+      height: user.height,
+      age: user.age,
+      gender: user.gender,
+      fitnessGoal: user.fitnessGoal,
+    },
+  });
 };
 
 // @desc    Register a new user
@@ -76,22 +79,7 @@ const registerUser = async (req, res) => {
     });
 
     if (user) {
-      res.status(201).json({
-        success: true,
-        token: generateToken(user._id),
-        user: {
-          id: user._id,
-          fullName: user.fullName,
-          email: user.email,
-          dailyGoals: user.dailyGoals,
-          onboardingCompleted: user.onboardingCompleted,
-          weight: user.weight,
-          height: user.height,
-          age: user.age,
-          gender: user.gender,
-          fitnessGoal: user.fitnessGoal,
-        },
-      });
+      sendTokens(user, 201, res);
     } else {
       res.status(400).json({ success: false, error: 'Invalid user data' });
     }
@@ -124,26 +112,49 @@ const loginUser = async (req, res) => {
       return res.status(401).json({ success: false, error: 'Invalid email or password' });
     }
 
-    res.status(200).json({
-      success: true,
-      token: generateToken(user._id),
-      user: {
-        id: user._id,
-        fullName: user.fullName,
-        email: user.email,
-        dailyGoals: user.dailyGoals,
-        onboardingCompleted: user.onboardingCompleted,
-        weight: user.weight,
-        height: user.height,
-        age: user.age,
-        gender: user.gender,
-        fitnessGoal: user.fitnessGoal,
-      },
-    });
+    sendTokens(user, 200, res);
   } catch (error) {
     console.error(error);
     res.status(500).json({ success: false, error: 'Server Error during login' });
   }
+};
+
+// @desc    Refresh access token
+// @route   POST /api/auth/refresh
+// @access  Public
+const refreshToken = async (req, res) => {
+  const token = req.cookies.refreshToken;
+
+  if (!token) {
+    return res.status(401).json({ success: false, error: 'No refresh token provided' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET || process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id);
+
+    if (!user) {
+      return res.status(401).json({ success: false, error: 'User not found' });
+    }
+
+    const accessToken = generateAccessToken(user._id);
+    res.status(200).json({ success: true, token: accessToken });
+  } catch (error) {
+    console.error(error);
+    res.status(401).json({ success: false, error: 'Invalid refresh token' });
+  }
+};
+
+// @desc    Logout user & clear cookie
+// @route   POST /api/auth/logout
+// @access  Public
+const logoutUser = async (req, res) => {
+  res.cookie('refreshToken', 'none', {
+    expires: new Date(Date.now() + 10 * 1000),
+    httpOnly: true,
+  });
+
+  res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
 
 // @desc    Get current user profile
@@ -338,6 +349,8 @@ const submitRating = async (req, res) => {
 module.exports = {
   registerUser,
   loginUser,
+  refreshToken,
+  logoutUser,
   getMe,
   completeOnboarding,
   updateGoals,

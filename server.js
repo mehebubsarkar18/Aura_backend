@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const helmet = require('helmet');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
@@ -21,12 +22,29 @@ const app = express();
 app.use(helmet({
   contentSecurityPolicy: false, // Disable CSP for simplicity in single-deployment
 }));
+
+// CORS Configuration
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+  ? [] // In production, same-origin is often enough if served by express
+  : ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000'];
+
 app.use(cors({
-  origin: '*',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'production') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
+
 app.use(express.json());
+app.use(cookieParser());
 
 // Request Logger for Debugging
 app.use((req, res, next) => {
