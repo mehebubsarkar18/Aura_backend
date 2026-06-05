@@ -123,29 +123,31 @@ const shareReport = async (req, res) => {
     doc.on('end', async () => {
       try {
         const pdfBuffer = Buffer.concat(buffers);
+// Setup email transporter
+// Flexible SMTP configuration (works with Gmail, Brevo, Mailgun, etc.)
+let transporter = nodemailer.createTransport({
+  host: process.env.EMAIL_HOST || 'smtp.ethereal.email',
+  port: process.env.EMAIL_PORT || 587,
+  secure: process.env.EMAIL_PORT == 465, // true for 465, false for other ports
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
 
-        // Setup email transporter
-        let transporter = nodemailer.createTransport({
-          service: 'gmail',
-          auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS,
-          },
-        });
-
-        // If no env vars, use ethereal for testing
-        if (!process.env.EMAIL_USER) {
-          let testAccount = await nodemailer.createTestAccount();
-          transporter = nodemailer.createTransport({
-            host: "smtp.ethereal.email",
-            port: 587,
-            secure: false,
-            auth: {
-              user: testAccount.user,
-              pass: testAccount.pass,
-            },
-          });
-        }
+// Fallback to Ethereal only if no USER is provided
+if (!process.env.EMAIL_USER) {
+  let testAccount = await nodemailer.createTestAccount();
+  transporter = nodemailer.createTransport({
+    host: "smtp.ethereal.email",
+    port: 587,
+    secure: false,
+    auth: {
+      user: testAccount.user,
+      pass: testAccount.pass,
+    },
+  });
+}
 
         const mailOptions = {
           from: '"AuraFit Reports" <reports@aurafit.com>',
