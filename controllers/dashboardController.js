@@ -16,10 +16,13 @@ const getTodayRange = () => {
 // @route   GET /api/dashboard/summary
 // @access  Private
 const getTodaySummary = async (req, res) => {
-  const { date } = req.query;
+  const { date, start: startQuery, end: endQuery } = req.query;
   let start, end;
 
-  if (date) {
+  if (startQuery && endQuery) {
+    start = new Date(startQuery);
+    end = new Date(endQuery);
+  } else if (date) {
     start = new Date(date);
     start.setHours(0, 0, 0, 0);
     end = new Date(date);
