@@ -185,7 +185,7 @@ if (!process.env.EMAIL_USER) {
 
     doc.fontSize(18).text('Performance Metrics', { underline: true });
     doc.fontSize(12).text(`Total Calories Burned: ${reportData.current.metrics.caloriesBurned} kcal`);
-    doc.text(`Workout: ${reportData.current.metrics.activeMinutes} min`);
+    doc.text(`Workouts: ${reportData.current.metrics.activeMinutes} min`);
     doc.text(`Workouts Completed: ${reportData.current.metrics.workoutCount}`);
     doc.text(`Calories Consumed: ${reportData.current.metrics.caloriesConsumed} kcal`);
     doc.text(`Water Intake: ${reportData.current.metrics.waterMl} mL`);
@@ -200,7 +200,7 @@ if (!process.env.EMAIL_USER) {
         return `${diff > 0 ? '+' : ''}${diff.toFixed(1)}%`;
     };
     doc.fontSize(12).text(`Calories Burned vs Prev Period: ${compare(reportData.current.metrics.caloriesBurned, reportData.previous.metrics.caloriesBurned)}`);
-    doc.text(`Workout vs Prev Period: ${compare(reportData.current.metrics.activeMinutes, reportData.previous.metrics.activeMinutes)}`);
+    doc.text(`Workouts vs Prev Period: ${compare(reportData.current.metrics.activeMinutes, reportData.previous.metrics.activeMinutes)}`);
 
     doc.end();
 
