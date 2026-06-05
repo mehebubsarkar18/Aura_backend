@@ -27,7 +27,6 @@ const aggregatePeriodData = async (userId, start, end) => {
   const waterMl = water.reduce((acc, curr) => acc + curr.amountMl, 0);
 
   const sleepMinutes = wellness.reduce((acc, curr) => acc + curr.sleepDurationMin, 0);
-  const mindfulnessMinutes = wellness.reduce((acc, curr) => acc + curr.mindfulnessDurationMin, 0);
   
   const avgSleep = wellness.length > 0 ? sleepMinutes / wellness.length : 0;
   
@@ -47,7 +46,6 @@ const aggregatePeriodData = async (userId, start, end) => {
       fat,
       waterMl,
       avgSleep,
-      mindfulnessMinutes,
       weightChange,
       startWeight,
       endWeight
