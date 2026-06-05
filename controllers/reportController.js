@@ -150,7 +150,7 @@ if (!process.env.EMAIL_USER) {
 }
 
         const mailOptions = {
-          from: '"AuraFit Reports" <reports@aurafit.com>',
+          from: `"AuraFit Reports" <${process.env.EMAIL_USER}>`,
           to: email,
           subject: `Your AuraFit ${type.charAt(0).toUpperCase() + type.slice(1)} Fitness Report`,
           text: `Attached is your ${type} fitness report from AuraFit. Keep up the great work!`,
@@ -162,7 +162,9 @@ if (!process.env.EMAIL_USER) {
           ],
         };
 
+        console.log(`Attempting to send email from ${process.env.EMAIL_USER} to ${email}...`);
         await transporter.sendMail(mailOptions);
+        console.log('Email sent successfully');
         res.status(200).json({ success: true, message: 'Report shared successfully via email' });
       } catch (err) {
         console.error('Email error:', err);
