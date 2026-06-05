@@ -117,49 +117,57 @@ const shareReport = async (req, res) => {
     // Create PDF
     const doc = new PDFDocument();
     let buffers = [];
-    doc.on('data', buffers.push.bind(buffers));
+    
+    doc.on('data', (chunk) => buffers.push(chunk));
+    
     doc.on('end', async () => {
-      let pdfBuffer = Buffer.concat(buffers);
+      try {
+        const pdfBuffer = Buffer.concat(buffers);
 
-      // Setup email transporter
-      // Note: In a real app, these should be in .env
-      let transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-
-      // If no env vars, use ethereal for testing
-      if (!process.env.EMAIL_USER) {
-        let testAccount = await nodemailer.createTestAccount();
-        transporter = nodemailer.createTransport({
-          host: "smtp.ethereal.email",
-          port: 587,
-          secure: false,
+        // Setup email transporter
+        let transporter = nodemailer.createTransport({
+          service: 'gmail',
           auth: {
-            user: testAccount.user,
-            pass: testAccount.pass,
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
           },
         });
+
+        // If no env vars, use ethereal for testing
+        if (!process.env.EMAIL_USER) {
+          let testAccount = await nodemailer.createTestAccount();
+          transporter = nodemailer.createTransport({
+            host: "smtp.ethereal.email",
+            port: 587,
+            secure: false,
+            auth: {
+              user: testAccount.user,
+              pass: testAccount.pass,
+            },
+          });
+        }
+
+        const mailOptions = {
+          from: '"AuraFit Reports" <reports@aurafit.com>',
+          to: email,
+          subject: `Your AuraFit ${type.charAt(0).toUpperCase() + type.slice(1)} Fitness Report`,
+          text: `Attached is your ${type} fitness report from AuraFit. Keep up the great work!`,
+          attachments: [
+            {
+              filename: `AuraFit_${type}_Report.pdf`,
+              content: pdfBuffer,
+            },
+          ],
+        };
+
+        await transporter.sendMail(mailOptions);
+        res.status(200).json({ success: true, message: 'Report shared successfully via email' });
+      } catch (err) {
+        console.error('Email error:', err);
+        if (!res.headersSent) {
+          res.status(500).json({ success: false, error: 'Failed to send email' });
+        }
       }
-
-      const mailOptions = {
-        from: '"AuraFit Reports" <reports@aurafit.com>',
-        to: email,
-        subject: `Your AuraFit ${type.charAt(0).toUpperCase() + type.slice(1)} Fitness Report`,
-        text: `Attached is your ${type} fitness report from AuraFit. Keep up the great work!`,
-        attachments: [
-          {
-            filename: `AuraFit_${type}_Report.pdf`,
-            content: pdfBuffer,
-          },
-        ],
-      };
-
-      await transporter.sendMail(mailOptions);
-      res.status(200).json({ success: true, message: 'Report shared successfully via email' });
     });
 
     // Draw PDF content
@@ -181,7 +189,7 @@ const shareReport = async (req, res) => {
     doc.moveDown();
     doc.fontSize(18).text('Progress Comparison', { underline: true });
     const compare = (curr, prev) => {
-        if (prev === 0) return 'N/A';
+        if (!prev) return curr > 0 ? '+100%' : '0%';
         const diff = ((curr - prev) / prev) * 100;
         return `${diff > 0 ? '+' : ''}${diff.toFixed(1)}%`;
     };
@@ -192,7 +200,9 @@ const shareReport = async (req, res) => {
 
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, error: 'Server Error sharing report' });
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, error: 'Server Error sharing report' });
+    }
   }
 };
 
