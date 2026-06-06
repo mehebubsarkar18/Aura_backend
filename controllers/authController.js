@@ -53,6 +53,33 @@ const sendTokens = (user, statusCode, res) => {
   });
 };
 
+const calculateDailyGoals = (weight, height, age, gender, fitnessGoal) => {
+  // BMR Calculation (Mifflin-St Jeor)
+  let bmr;
+  if (gender === 'male') {
+    bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+  } else if (gender === 'female') {
+    bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+  } else {
+    bmr = 10 * weight + 6.25 * height - 5 * age - 78;
+  }
+
+  // Activity Factor (Assuming light exercise: 1.375)
+  let calories = bmr * 1.375;
+
+  // Fitness Goal adjustment
+  if (fitnessGoal === 'lose-weight') calories -= 500;
+  if (fitnessGoal === 'gain-muscle') calories += 400;
+
+  return {
+    calories: Math.max(1200, Math.round(calories)),
+    caloriesBurned: 400,
+    activeMinutes: 45,
+    waterMl: Math.round(weight * 33), // 33ml per kg
+    sleepMinutes: 480
+  };
+};
+
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
