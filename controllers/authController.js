@@ -442,6 +442,7 @@ module.exports = {
   logoutUser,
   getMe,
   completeOnboarding,
+  updateProfile,
   updateGoals,
   changePassword,
   getStats,
