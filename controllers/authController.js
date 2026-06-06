@@ -267,6 +267,68 @@ const completeOnboarding = async (req, res) => {
   }
 };
 
+// @desc    Update user profile biometrics
+// @route   PUT /api/auth/profile
+// @access  Private
+const updateProfile = async (req, res) => {
+  const { weight, height, age, gender, fitnessGoal } = req.body;
+
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
+
+    const weightChanged = weight !== undefined && weight !== user.weight;
+
+    // Update fields if provided
+    if (weight !== undefined) user.weight = weight;
+    if (height !== undefined) user.height = height;
+    if (age !== undefined) user.age = age;
+    if (gender !== undefined) user.gender = gender;
+    if (fitnessGoal !== undefined) user.fitnessGoal = fitnessGoal;
+
+    // Recalculate goals based on new biometrics
+    const calculatedGoals = calculateDailyGoals(
+      user.weight,
+      user.height,
+      user.age,
+      user.gender,
+      user.fitnessGoal
+    );
+    user.dailyGoals = calculatedGoals;
+
+    await user.save();
+
+    // If weight changed, log it in history
+    if (weightChanged) {
+      await Weight.create({
+        user: user._id,
+        weight: user.weight,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        dailyGoals: user.dailyGoals,
+        onboardingCompleted: user.onboardingCompleted,
+        weight: user.weight,
+        height: user.height,
+        age: user.age,
+        gender: user.gender,
+        fitnessGoal: user.fitnessGoal,
+      },
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ success: false, error: 'Server Error updating profile' });
+  }
+};
+
 // @desc    Update daily goals
 // @route   PUT /api/auth/goals
 // @access  Private

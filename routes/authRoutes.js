@@ -8,6 +8,7 @@ const {
   completeOnboarding,
   updateGoals,
   changePassword,
+  updateProfile,
   getStats,
   submitRating,
 } = require('../controllers/authController');
@@ -24,6 +25,7 @@ router.get('/stats', getStats);
 router.post('/rating', protect, submitRating);
 router.get('/heartbeat', (req, res) => res.json({ success: true, message: 'Auth routes reachable' }));
 router.post('/onboarding', protect, completeOnboarding);
+router.put('/profile', protect, updateProfile);
 router.put('/goals', protect, updateGoals);
 router.put('/password', protect, changePassword);
 
